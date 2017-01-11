@@ -3,7 +3,7 @@ This Objective-C class allows you to reorder cells in a UITableView. Each elemen
 You can use this to reorder simple elements or tables with subelements (i.e. tasks with subtasks)
 
 Example of call:
-
+```
      [[EMRReorderTableCells alloc] initWithTableView:_taskTableView
                                                                 elements:[_tasks objectAtIndex:0]
                                                                 elementsOffset:5
@@ -27,7 +27,7 @@ Example of call:
                                             [_httpClient createUpdateRequestForObject:element withPath:@"task/" withRegeneration:NO];
                                             [_httpClient update:nil];
                                         }];
-
+```
 Params:
 ***elements***
 
@@ -70,6 +70,7 @@ A block that return true if element is a subelement and false if is a single ele
 A block that perform and action after finishing the reorder.
 
 **Example of blocks**
+```
     -(void)expandCollapseSubtasksAtIndexPath:(NSIndexPath *)indexPath{
         NSLog(@"Row: %ld - Section: %ld", (long)indexPath.row, (long)indexPath.section);
         if (indexPath != nil)
@@ -141,7 +142,6 @@ A block that perform and action after finishing the reorder.
     }
 
     -(void)removeSubtasksAtIndexPath:(NSIndexPath *)indexPath{
-        // TODO: arreglar el sort
         Task *task = [_tasks objectAtIndex:indexPath.row];
         TaskTitleCell *cell = (TaskTitleCell *)[_taskTableView cellForRowAtIndexPath:indexPath];
         UILabel *subtasksNumberLabel = (UILabel *)[cell viewWithTag:107];
@@ -168,6 +168,7 @@ A block that perform and action after finishing the reorder.
         
         [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
     }
+```
 
 *Documentation*
 
@@ -177,7 +178,7 @@ I have use some inspiration from https://github.com/hpique/HPReorderTableView
 **A. Manage gestureRecognition**
 
 ***longPressGestureRecognized:***
-
+```
     - (IBAction)longPressGestureRecognized:(id)sender {
         
         _reorderGestureRecognizer = (UILongPressGestureRecognizer *)sender;
@@ -271,23 +272,23 @@ I have use some inspiration from https://github.com/hpique/HPReorderTableView
             }
         }
     }
-
+```
 
 ***gestureRecognizerCancel:***
 
 It is use to cancel gesture recognition to finish the reorder action.
-
+```
     -(void) gestureRecognizerCancel:(UIGestureRecognizer *) gestureRecognizer
     { // See: http://stackoverflow.com/a/4167471/143378
         gestureRecognizer.enabled = NO;
         gestureRecognizer.enabled = YES;
     }
-
+```
 
 ***scrollTableWithCell:***
 
 The method it is called to make scrolling movement when you are in the limits of the table (up and down)
-
+```
     - (void)scrollTableWithCell:(NSTimer *)timer
     {
         UILongPressGestureRecognizer *gesture = _reorderGestureRecognizer;
@@ -331,13 +332,13 @@ The method it is called to make scrolling movement when you are in the limits of
             }
         }
     }
-
+```
 **B. Snapshot management**
 
 ***createSnapshotForCellAtIndexPath:withPosition***
 
 Method that creates a snapshot (a image copy) of the cell you are moving
-
+```
     -(UIView *)createSnapshotForCellAtIndexPath:(NSIndexPath *)indexPath withPosition:(CGPoint)location{
         UITableViewCell *cell = [_tableView cellForRowAtIndexPath:indexPath];
         
@@ -366,11 +367,11 @@ Method that creates a snapshot (a image copy) of the cell you are moving
         
         return snapshot;
     }
-
+```
 ***customSnapshoFromView:***
 
 Returns a customized snapshot of a given view. */
-
+```
     - (UIView *)customSnapshoFromView:(UIView *)inputView {
         
         // Make an image from the input view.
@@ -389,21 +390,22 @@ Returns a customized snapshot of a given view. */
         
         return snapshot;
     }
-
+```
 ***updateSnapshotWithPosition:***
 
 Given a CGPoint, it changes the snapshot position to show the cell you are moving in the right place of the _tableView
-
+```
     -(void)updateSnapshotWithPosition:(CGPoint)location{
         CGPoint center = snapshot.center;
         center.y = location.y;
         snapshot.center = center;
     }
+```
 
 ***deleteSnapshotForRowAtIndexPath:***
 
 When dragging finishes, you need to delete the snapshot from the _tableView
-
+```
     -(void)deleteSnapshotForRowAtIndexPath:(NSIndexPath *)sourceIndexPath{
         UITableViewCell *cell = [_tableView cellForRowAtIndexPath:sourceIndexPath];
         cell.hidden = NO;
@@ -420,8 +422,10 @@ When dragging finishes, you need to delete the snapshot from the _tableView
             [snapshot removeFromSuperview];
         }];
     }
-***calculateScroll***
+```
 
+***calculateScroll***
+```
     -(void)calculateScroll:(UIGestureRecognizer *)gestureRecognizer{
         
         const CGPoint location = [gestureRecognizer locationInView:_tableView];
@@ -453,19 +457,20 @@ When dragging finishes, you need to delete the snapshot from the _tableView
         }
     
     }
+```
 
 **C. How to use it**
 
 In your init method, assign a gesture recognizer to the table view. Assign as action the method `longPressGestureRecognized:` as follows:
-
+```
         _reorderGestureRecognizer = [[UILongPressGestureRecognizer alloc]
                                                    initWithTarget:self action:@selector(longPressGestureRecognized:)];
         
         [_tableView addGestureRecognizer:_reorderGestureRecognizer];
-
+```
 
 Declare the variables you will need to use the above code explained
-
+```
     @implementation YourClassName{
         
         CADisplayLink *_scrollDisplayLink;
@@ -473,3 +478,17 @@ Declare the variables you will need to use the above code explained
         UIView *snapshot; // A snapshot of the row user is moving.
         NSIndexPath *sourceIndexPath; // Initial index path, where gesture begins.
     }
+```
+
+## LICENSE ##
+Copyright (c) 2017. Enrique Ismael Mendoza Robaina
+
+EMRReorderTableCElls is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+Playtch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
