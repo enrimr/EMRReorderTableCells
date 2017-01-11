@@ -35,35 +35,35 @@ This is an autoanswer to a StackOVerflow question (http://stackoverflow.com/ques
 
 ### Params ###
 
-***elements***
+* ***elements***:
 NSArray with elements to reorder.
 
-***elementsOffset***
+* ***elementsOffset***: 
 Integer with an offset. Imagine a main menu where you have three main sections and a list of custom sections. If you want to allow only to reorder the custom sections, you have to specify an offset of 3. The first three cells will be locked.
 
-***collapseSubElements***
+* ***collapseSubElements***: 
 Bool that specify if you want to collapse subelements or not
 
 ### Blocks meaning ###
-***collapseSubCellsAtIndexPathBlock***
+* ***collapseSubCellsAtIndexPathBlock***: 
 A block that implement the action of collapsing subelements' cells
 
-***removeSubElementsForElementBlock***
+* ***removeSubElementsForElementBlock***: 
 A block that implement the action of removing subelements from the element list for a given element.
 
-***removeSubElementsForElementAtIndexPathBlock***
+* ***removeSubElementsForElementAtIndexPathBlock***: 
 A block that implement the action of removing subelements from the element list for a given index path.
 
-***areBrothersElements***
+* ***areBrothersElements***: 
 A block that return true if both elements are brothers (they are in the same level) or false if they are father and son or cousins.
 
-***isSubElementBlock***
+* ***isSubElementBlock***: 
 A block that return true if element is a subelement and false if is a single element without children.
 
-***isHidingSubElementsBlock***
+* ***isHidingSubElementsBlock***: 
 A block that return true if element if an element is hiding subelements and false if not.
 
-***completionBlock***
+* ***completionBlock***: 
 A block that perform and action after finishing the reorder.
 
 **Example of blocks**
