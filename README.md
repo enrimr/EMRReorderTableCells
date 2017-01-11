@@ -4,6 +4,8 @@ This Objective-C class allows you to reorder cells in a UITableView. Each elemen
 
 You can use this to reorder simple elements or tables with subelements (i.e. tasks with subtasks)
 
+This is an autoanswer to a StackOVerflow question (http://stackoverflow.com/questions/32521725/autoscroll-smoothly-uitableview-while-dragging-uitableviewcells-in-ios-app)
+
 ## Example of use ##
 ```
  [[EMRReorderTableCells alloc] initWithTableView:_taskTableView
