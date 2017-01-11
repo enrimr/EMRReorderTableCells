@@ -1,177 +1,171 @@
+# EMRReorderTableCells #
+
 This Objective-C class allows you to reorder cells in a UITableView. Each element in cells have to implement a property called "position".
 
 You can use this to reorder simple elements or tables with subelements (i.e. tasks with subtasks)
 
-Example of call:
+## Example of use ##
 ```
-     [[EMRReorderTableCells alloc] initWithTableView:_taskTableView
-                                                                elements:[_tasks objectAtIndex:0]
-                                                                elementsOffset:5
-                                                     collapseSubElements:YES
-                                        collapseSubCellsAtIndexPathBlock:^(NSUInteger idx) {
-                                            // In case you have subelements
-                                            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:idx inSection:0];
-                                            [self expandCollapseSubtasksAtIndexPath:indexPath];
-                                        } removeSubElementsForElementBlock:^(id element) {
-                                            [self removeSubtasksForTask:(Task *)element];
-                                        } removeSubElementsForElementAtIndexPathBlock:^(NSIndexPath *indexPath) {
-                                            [self removeSubtasksAtIndexPath:indexPath];
-                                        } areBrothersElements:^BOOL(id source, id target) {
-                                            return [(Task *)source isBrotherOfTask:(Task *)target];
-                                        } isSubElementBlock:^BOOL(id element) {
-                                            return ![[(Task *)element subtask] isEqualToString:@"0"];
-                                        } isHidingSubElementsBlock:^BOOL(id element) {
-                                            return [[(Task *)element hidesubtasks] isEqualToNumber:@0];
-                                        } completionBlock:^(id element) {
-                                            // Update element
-                                            [_httpClient createUpdateRequestForObject:element withPath:@"task/" withRegeneration:NO];
-                                            [_httpClient update:nil];
-                                        }];
+ [[EMRReorderTableCells alloc] initWithTableView:_taskTableView
+                            elements:[_tasks objectAtIndex:0]
+                      elementsOffset:5
+                 collapseSubElements:YES
+    collapseSubCellsAtIndexPathBlock:^(NSUInteger idx) {
+        // In case you have subelements
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:idx inSection:0];
+        [self expandCollapseSubtasksAtIndexPath:indexPath];
+    } removeSubElementsForElementBlock:^(id element) {
+        [self removeSubtasksForTask:(Task *)element];
+    } removeSubElementsForElementAtIndexPathBlock:^(NSIndexPath *indexPath) {
+        [self removeSubtasksAtIndexPath:indexPath];
+    } areBrothersElements:^BOOL(id source, id target) {
+        return [(Task *)source isBrotherOfTask:(Task *)target];
+    } isSubElementBlock:^BOOL(id element) {
+        return ![[(Task *)element subtask] isEqualToString:@"0"];
+    } isHidingSubElementsBlock:^BOOL(id element) {
+        return [[(Task *)element hidesubtasks] isEqualToNumber:@0];
+    } completionBlock:^(id element) {
+        // Update element
+        [_httpClient createUpdateRequestForObject:element withPath:@"task/" withRegeneration:NO];
+        [_httpClient update:nil];
+    }];
 ```
-Params:
-***elements***
 
+### Params ###
+
+***elements***
 NSArray with elements to reorder.
 
 ***elementsOffset***
-
 Integer with an offset. Imagine a main menu where you have three main sections and a list of custom sections. If you want to allow only to reorder the custom sections, you have to specify an offset of 3. The first three cells will be locked.
 
 ***collapseSubElements***
-
 Bool that specify if you want to collapse subelements or not
-Blocks meaning:
-***collapseSubCellsAtIndexPathBlock***
 
+### Blocks meaning ###
+***collapseSubCellsAtIndexPathBlock***
 A block that implement the action of collapsing subelements' cells
 
 ***removeSubElementsForElementBlock***
-
 A block that implement the action of removing subelements from the element list for a given element.
 
 ***removeSubElementsForElementAtIndexPathBlock***
-
 A block that implement the action of removing subelements from the element list for a given index path.
 
 ***areBrothersElements***
-
 A block that return true if both elements are brothers (they are in the same level) or false if they are father and son or cousins.
 
 ***isSubElementBlock***
-
 A block that return true if element is a subelement and false if is a single element without children.
 
 ***isHidingSubElementsBlock***
-
-A block that return true if element is a subelement and false if is a single element without children.
+A block that return true if element if an element is hiding subelements and false if not.
 
 ***completionBlock***
-
 A block that perform and action after finishing the reorder.
 
 **Example of blocks**
 ```
-    -(void)expandCollapseSubtasksAtIndexPath:(NSIndexPath *)indexPath{
-        NSLog(@"Row: %ld - Section: %ld", (long)indexPath.row, (long)indexPath.section);
-        if (indexPath != nil)
-        {
-            Task *task = [[_tasks objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
-            TaskTitleCell *cell = (TaskTitleCell *)[_taskTableView cellForRowAtIndexPath:indexPath];
-            UILabel *subtasksNumberLabel = (UILabel *)[cell viewWithTag:107];
-            UIButton *subtasksButton = (UIButton *)[cell viewWithTag:108];
-            
-            NSMutableArray *subtasksIndexPaths = [[NSMutableArray alloc] init];
-            
-            NSDictionary *subtasksAndIndexesDictionary = [task getSubtasksIndexesInTaskCollection:[_tasks objectAtIndex:indexPath.section] ofList:task.list];
-            //NSDictionary *subtasksAndIndexesDictionary = [task getSubtasksIndexesInTaskCollection:[_tasks objectAtIndex:indexPath.section] ofList:task.list filteredBy:(int)_selectedFilter];
-            
-            NSIndexSet *indexes = [subtasksAndIndexesDictionary objectForKey:@"indexes"];
-            NSArray *subtasks = [subtasksAndIndexesDictionary objectForKey:@"subtasks"];
-            
-            [indexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
-                NSIndexPath *subtaskIndexPath = [NSIndexPath indexPathForRow:idx inSection:indexPath.section];
-                [subtasksIndexPaths addObject:subtaskIndexPath];
-            }];
-            
-            NSNumber *hidden;
-            //Expand
-            if (!subtasksButton.selected){
-                hidden = @0;
-                //[task setHidesubtasks:@0];
-                subtasksNumberLabel.textColor = [UIColor colorWithRed:72.0/255.0 green:175.0/255.0 blue:237.0/255.0 alpha:1.0];
-                
-                [[_tasks objectAtIndex:indexPath.section] insertObjects:subtasks atIndexes:indexes];
-                
-                [_taskTableView insertRowsAtIndexPaths:subtasksIndexPaths withRowAnimation:UITableViewRowAnimationTop];
-                
-                //Collapse
-            }else{
-                hidden = @1;
-                //[task setHidesubtasks:@1];
-                subtasksNumberLabel.textColor = [UIColor whiteColor];
-                
-                NSArray *subtasks = [task getSubtasks];
-                
-                if (subtasks){
-                    
-                    [[_tasks objectAtIndex:indexPath.section] removeObjectsInArray:subtasks];
-                    
-                    [_taskTableView deleteRowsAtIndexPaths:subtasksIndexPaths withRowAnimation:UITableViewRowAnimationBottom];
-                }
-                
-            }
-            
-            subtasksButton.selected = !subtasksButton.selected;
-            //task.hidesubtasksValue = !subtasksButton.selected;
-            task.hidesubtasks = hidden;
-            
-            [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
-        }
-    }
-
-    -(void)removeSubtasksForTask:(Task *)task{
-            NSNumber *hidden = @1;
-            
-            NSArray *subtasks = [task getSubtasks];
-        
-            [_tasks removeObjectsInArray:subtasks];
-            
-            task.hidesubtasks = hidden;
-            
-            [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
-    }
-
-    -(void)removeSubtasksAtIndexPath:(NSIndexPath *)indexPath{
-        Task *task = [_tasks objectAtIndex:indexPath.row];
+-(void)expandCollapseSubtasksAtIndexPath:(NSIndexPath *)indexPath{
+    NSLog(@"Row: %ld - Section: %ld", (long)indexPath.row, (long)indexPath.section);
+    if (indexPath != nil)
+    {
+        Task *task = [[_tasks objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
         TaskTitleCell *cell = (TaskTitleCell *)[_taskTableView cellForRowAtIndexPath:indexPath];
         UILabel *subtasksNumberLabel = (UILabel *)[cell viewWithTag:107];
         UIButton *subtasksButton = (UIButton *)[cell viewWithTag:108];
         
         NSMutableArray *subtasksIndexPaths = [[NSMutableArray alloc] init];
-        NSNumber *hidden = @1;
-
-        subtasksNumberLabel.textColor = [UIColor whiteColor];
         
-        NSArray *subtasks = [task getSubtasks];
+        NSDictionary *subtasksAndIndexesDictionary = [task getSubtasksIndexesInTaskCollection:[_tasks objectAtIndex:indexPath.section] ofList:task.list];
+        //NSDictionary *subtasksAndIndexesDictionary = [task getSubtasksIndexesInTaskCollection:[_tasks objectAtIndex:indexPath.section] ofList:task.list filteredBy:(int)_selectedFilter];
         
-        [_tasks removeObjectsInArray:subtasks];
+        NSIndexSet *indexes = [subtasksAndIndexesDictionary objectForKey:@"indexes"];
+        NSArray *subtasks = [subtasksAndIndexesDictionary objectForKey:@"subtasks"];
         
-        for (int i=1;i<=subtasks.count; i++){
-            NSIndexPath *subtaskIndexPath = [NSIndexPath indexPathForRow:indexPath.row+i inSection:0];
+        [indexes enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+            NSIndexPath *subtaskIndexPath = [NSIndexPath indexPathForRow:idx inSection:indexPath.section];
             [subtasksIndexPaths addObject:subtaskIndexPath];
+        }];
+        
+        NSNumber *hidden;
+        //Expand
+        if (!subtasksButton.selected){
+            hidden = @0;
+            //[task setHidesubtasks:@0];
+            subtasksNumberLabel.textColor = [UIColor colorWithRed:72.0/255.0 green:175.0/255.0 blue:237.0/255.0 alpha:1.0];
+            
+            [[_tasks objectAtIndex:indexPath.section] insertObjects:subtasks atIndexes:indexes];
+            
+            [_taskTableView insertRowsAtIndexPaths:subtasksIndexPaths withRowAnimation:UITableViewRowAnimationTop];
+            
+            //Collapse
+        }else{
+            hidden = @1;
+            //[task setHidesubtasks:@1];
+            subtasksNumberLabel.textColor = [UIColor whiteColor];
+            
+            NSArray *subtasks = [task getSubtasks];
+            
+            if (subtasks){
+                
+                [[_tasks objectAtIndex:indexPath.section] removeObjectsInArray:subtasks];
+                
+                [_taskTableView deleteRowsAtIndexPaths:subtasksIndexPaths withRowAnimation:UITableViewRowAnimationBottom];
+            }
+            
         }
         
-        [_taskTableView deleteRowsAtIndexPaths:subtasksIndexPaths withRowAnimation:UITableViewRowAnimationBottom];
-        
         subtasksButton.selected = !subtasksButton.selected;
+        //task.hidesubtasksValue = !subtasksButton.selected;
         task.hidesubtasks = hidden;
         
         [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
     }
+}
+
+-(void)removeSubtasksForTask:(Task *)task{
+        NSNumber *hidden = @1;
+        
+        NSArray *subtasks = [task getSubtasks];
+    
+        [_tasks removeObjectsInArray:subtasks];
+        
+        task.hidesubtasks = hidden;
+        
+        [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
+}
+
+-(void)removeSubtasksAtIndexPath:(NSIndexPath *)indexPath{
+    Task *task = [_tasks objectAtIndex:indexPath.row];
+    TaskTitleCell *cell = (TaskTitleCell *)[_taskTableView cellForRowAtIndexPath:indexPath];
+    UILabel *subtasksNumberLabel = (UILabel *)[cell viewWithTag:107];
+    UIButton *subtasksButton = (UIButton *)[cell viewWithTag:108];
+    
+    NSMutableArray *subtasksIndexPaths = [[NSMutableArray alloc] init];
+    NSNumber *hidden = @1;
+
+    subtasksNumberLabel.textColor = [UIColor whiteColor];
+    
+    NSArray *subtasks = [task getSubtasks];
+    
+    [_tasks removeObjectsInArray:subtasks];
+    
+    for (int i=1;i<=subtasks.count; i++){
+        NSIndexPath *subtaskIndexPath = [NSIndexPath indexPathForRow:indexPath.row+i inSection:0];
+        [subtasksIndexPaths addObject:subtaskIndexPath];
+    }
+    
+    [_taskTableView deleteRowsAtIndexPaths:subtasksIndexPaths withRowAnimation:UITableViewRowAnimationBottom];
+    
+    subtasksButton.selected = !subtasksButton.selected;
+    task.hidesubtasks = hidden;
+    
+    [[NSManagedObjectContext MR_defaultContext] MR_saveToPersistentStoreAndWait];
+}
 ```
 
-*Documentation*
-
+## Explanation of reorder ##
 
 I have use some inspiration from https://github.com/hpique/HPReorderTableView
 
